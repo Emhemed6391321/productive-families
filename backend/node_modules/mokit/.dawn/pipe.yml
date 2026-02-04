@@ -1,0 +1,71 @@
+dev:
+  - name: clean
+    target: ./dist
+  - name: webpack
+    output: dist
+    entry: 
+      (1): ./examples/*/index.js
+    template: ./examples/assets/*.html
+    folders:
+      html: examples
+      js: examples/js
+      css: examples/css
+    common:
+      disabled: true
+    watch: true
+    optimization: true
+    babel:
+      transform:
+        helpers: true
+        polyfill: false
+        regenerator: false
+        useBuiltIns: true
+  - name: server
+    port: 8008
+    public: ./dist
+  - name: browser-sync
+    files: 
+      - './dist/**/*.*'
+
+build:
+  - name: clean
+    target: ./dist
+  - name: webpack
+    output: dist
+    folders:
+      js: '.'
+    entry: 
+      mokit: ./src/index.js
+    common:
+      disabled: true
+    umd:
+      library: '${project.name}'
+      libraryTarget: 'umd'
+      umdNamedDefine: true
+    compress: false
+    optimization: true
+    babel:
+      transform:
+        helpers: true
+        polyfill: false
+        regenerator: false
+        useBuiltIns: true
+  - name: webpack
+    output: dist
+    folders:
+      js: '.'
+    entry: 
+      mokit.min: ./src/index.js
+    common:
+      disabled: true
+    optimization: true
+    umd:
+      library: '${project.name}'
+      libraryTarget: 'umd'
+      umdNamedDefine: true
+    babel:
+      transform:
+        helpers: true
+        polyfill: false
+        regenerator: false
+        useBuiltIns: true
