@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-ibm-plex-sans-arabic);
+
+  /* Custom Palette */
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-warm-cream: var(--warm-cream);
+  --color-charcoal: var(--charcoal);
+}
+
+:root {
+  /* Warm Earthy Palette */
+  --primary: #CC5500;
+  /* Burnt Orange */
+  --primary-hover: #A04000;
+  --secondary: #556B2F;
+  /* Olive Green */
+  --accent: #E8DCC2;
+  --warm-cream: #FFFDD0;
+  /* Background */
+  --charcoal: #333333;
+  /* Text */
+
+  --background: var(--warm-cream);
+  --foreground: var(--charcoal);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Dark mode adjustments if needed, or keep earthy feel */
+    --background: #1a1a1a;
+    --foreground: #FFFDD0;
+    --primary: #E06600;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-ibm-plex-sans-arabic), sans-serif;
+}
