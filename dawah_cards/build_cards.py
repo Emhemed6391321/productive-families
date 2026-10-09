@@ -19,7 +19,7 @@ BRONZE = (150, 108, 48)               # gold panels (as in the statistics refere
 PAPER_TOP, PAPER_BOT = (249, 242, 229), (243, 234, 219)
 WHITE = (255, 255, 255)
 ORG = "تنسيقية طرابلس ب"
-DATE_LINE = "2026 ميلادي - 1448 هجري"
+DATE_LINE = "2027 ميلادي - 1448 هجري"
 MARGIN = 90
 SKY_Y = 930                            # top of the skyline band
 
