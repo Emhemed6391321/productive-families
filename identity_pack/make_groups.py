@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """11 WhatsApp group pictures (1080x1080; WhatsApp shows them as a circle, so everything
 sits inside the circle).  Each coordination gets its own colour from the identity family,
-the Rakb al-Abrar logo and its number 1..11.   Output: Groups/Group-01.png ... Group-11.png"""
+the supplied (white) coordination logo and its number 1..11.   Output: Groups/Group-01.png ... Group-11.png"""
 from PIL import Image, ImageDraw
 from pack_lib import *
 
@@ -31,7 +31,7 @@ def group(n, base):
     d = ImageDraw.Draw(img)
     d.ellipse((S / 2 - 486, S / 2 - 486, S / 2 + 486, S / 2 + 486), outline=GOLD_LT, width=7)
     d.ellipse((S / 2 - 466, S / 2 - 466, S / 2 + 466, S / 2 + 466), outline=GOLD_LT, width=2)
-    logo(img, "rakb_gold", (S - 330) // 2, 135, w=330, rgb=GOLD_LT)
+    logo(img, "hajj_logo_white", (S - 300) // 2, 128, w=300)
     diamond_divider(img, S / 2, 478, half=190, gap=30, col=GOLD_LT, width=3, size=12)
     size = 430 if n < 10 else 360
     d.text((S / 2, 700), str(n), font=font(700, size), fill=CREAM, anchor="mm")
