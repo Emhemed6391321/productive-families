@@ -11,6 +11,15 @@ NAME1, NAME2 = "تنسيقية", "طرابلس ب"
 PLACE = "طرابلس - زناتة"
 DW, DH = 1080, 2430
 
+def smooth(im, w, S):
+    """Upscale a small raster logo to print size with smooth (de-stair-stepped) edges."""
+    h = round(im.size[1] * w / im.size[0])
+    big = im.resize((w, h), Image.BICUBIC)
+    a = big.getchannel("A").filter(ImageFilter.GaussianBlur(1.3 * S))
+    a = a.point(lambda v: max(0, min(255, int((v - 128) * 2.4 + 128))))
+    big.putalpha(a)
+    return big
+
 def build(S):
     P = lambda v: int(round(v * S))
     W, H = P(DW), P(DH)
@@ -29,7 +38,7 @@ def build(S):
     d = ImageDraw.Draw(img)
     # ---------------------------------------------------------------- 1) authority logo (top)
     lw = P(300)
-    logo(img, "hajj_logo_white", (W - lw) // 2, P(150), w=lw)
+    paste(img, smooth(asset("hajj_logo_white"), lw, S), (W - lw) // 2, P(150))
     # ---------------------------------------------------------------- 2) name cartouche
     box = (P(70), P(560), P(DW - 70), P(1180))
     lay = Image.new("RGBA", img.size, (0, 0, 0, 0)); ld = ImageDraw.Draw(lay)
@@ -51,7 +60,7 @@ def build(S):
     d.text((W // 2, P(1040)), NAME2, font=f, fill=GOLD_LT, anchor="mm", direction="rtl", language="ar")
     # ---------------------------------------------------------------- 3) Rakb al-Abrar
     rw = P(560)
-    rk = fit_w(tinted("rakb_gold", GOLD_LT), rw)
+    rk = smooth(tinted("rakb_gold", GOLD_LT), rw, S)
     paste(img, rk, (W - rw) // 2, P(1270))
     # ---------------------------------------------------------------- 4) phone + place
     ph = (P(100), P(1840), P(DW - 100), P(2080))
