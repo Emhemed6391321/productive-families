@@ -215,7 +215,64 @@ def build_c2(S):
             mx=170, ph_h=190, lab=36, dig=98, gap=22, pill_h=80, pill_font=44, pill_mx=300)
     return img
 
-BUILDS = [("A-teal", build_a), ("B-green-cream", build_b), ("C-light-medallion", build_c), ("C2-authority-name", build_c2)]
+# ================================================================== C3 : refined typography system (authority name redesigned)
+def build_c3(S):
+    """One type system: Plex Arabic only. Scale (design units): authority key 190/700, authority lead 92/600,
+    coordination 84/700, phone label 40/600, digits 100/700, place 46/600."""
+    P = lambda v: int(round(v * S)); W, H = P(DW), P(DH)
+    img = paper(W, H)
+    img = add_lattice(img, (205, 183, 140), 40, ramp=vramp(H, P(300), P(2300), .25, 1), R=P(120))
+    paste(img, sky_layer(W, 0.6), 0, P(1780))
+    cx, cy, r = W // 2, P(290), P(400)
+    for rr, col, wd in ((r + P(44), GOLD, 3), (r + P(21), GOLD_LT, 2)):
+        ImageDraw.Draw(img).ellipse((cx - rr, cy - rr, cx + rr, cy + rr), outline=col, width=max(2, P(wd)))
+    md = Image.new("L", img.size, 0); ImageDraw.Draw(md).ellipse((cx - r, cy - r, cx + r, cy + r), fill=255)
+    gg = add_lattice(gradient(W, H, [(0, (0, 98, 84)), (1, (3, 58, 36))], 60), GOLD_LT, 30, R=P(100))
+    img.paste(gg, (0, 0), md.filter(ImageFilter.GaussianBlur(0.6 * S)))
+    d = ImageDraw.Draw(img)
+    d.ellipse((cx - r, cy - r, cx + r, cy + r), outline=GOLD, width=max(4, P(7)))
+    for k_ in range(8):
+        a = math.radians(-90 + k_ * 45 + 22.5)
+        star8(d, cx + int((r + P(44)) * math.cos(a)), cy + int((r + P(44)) * math.sin(a)), P(15), fill=GOLD)
+    lw = P(340); paste(img, smooth(asset("hajj_logo_white"), lw, S), cx - lw // 2, cy - int(lw * 0.5) + P(18))
+
+    # ---- authority name: lead line (small, flanked by ornaments) + key line (large, gold) on a deep-green banner
+    box = (P(60), P(770), P(DW - 60), P(1170))
+    soft_shadow(img, box, P(70), alpha=110, blur=P(26), off=P(14), rgb=(0, 20, 12))
+    pg = gradient(W, H, [(0, (3, 70, 44)), (1, (2, 36, 22))], 90)
+    pm = Image.new("L", img.size, 0); ImageDraw.Draw(pm).rounded_rectangle(box, P(70), fill=255)
+    img.paste(pg, (0, 0), pm)
+    img.paste(add_lattice(Image.new("RGB", img.size, (0, 0, 0)), GOLD_LT, 18, R=P(90)), (0, 0), pm.point(lambda v: int(v * 0.0)))
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle(box, P(70), outline=GOLD, width=max(4, P(6)))
+    d.rounded_rectangle((box[0] + P(16), box[1] + P(16), box[2] - P(16), box[3] - P(16)), P(56), outline=GOLD_LT, width=max(2, P(2)))
+    lead_y, key_y = 880, 1030
+    lf = font(600, P(92)); lt = lf.getlength(AUTH1, direction="rtl", language="ar")
+    d.text((W // 2, P(lead_y)), AUTH1, font=lf, fill=CREAM, anchor="mm", direction="rtl", language="ar")
+    for sx in (-1, 1):                                          # ornament lines beside the lead
+        x0 = W // 2 + sx * (lt / 2 + P(36)); x1 = W // 2 + sx * (P(DW / 2 - 130))
+        d.line((x0, P(lead_y), x1, P(lead_y)), fill=GOLD, width=max(2, P(3)))
+        dx = x1; d.polygon([(dx, P(lead_y) - P(11)), (dx + P(11) * sx * -1 * -1, P(lead_y)), (dx, P(lead_y) + P(11)), (dx - P(11) * sx * -1 * -1, P(lead_y))], fill=GOLD)
+    kf = font(700, P(190))
+    while kf.getlength(AUTH2, direction="rtl", language="ar") > P(DW - 260): kf = font(700, kf.size - 4)
+    d.text((W // 2, P(key_y)), AUTH2, font=kf, fill=GOLD_LT, anchor="mm", direction="rtl", language="ar")
+    # star crown on the top border
+    sx_, sy_ = W // 2, box[1]
+    d.ellipse((sx_ - P(48), sy_ - P(48), sx_ + P(48), sy_ + P(48)), fill=PAPER_A, outline=GOLD, width=max(3, P(5)))
+    star8(d, sx_, sy_, P(31), fill=GOLD); star8(d, sx_, sy_, P(15), fill=PAPER_A, rot=-math.pi / 2 + math.pi / 8)
+
+    # ---- coordination name (smaller, same family/weight, green) with a thin gold underline
+    fit_text(d, (W / S / 2, 1292), COORD, 84, S, GREEN, 860)
+    diamond_divider(img, W // 2, P(1370), half=P(230), gap=P(30), col=GOLD, width=max(2, P(3)), size=P(11))
+    # ---- Rakb al-Abrar
+    rw = P(400); paste(img, smooth(asset("rakb_gold"), rw, S), (W - rw) // 2, P(1425))
+    # ---- phone + place (same scale in both)
+    contact(img, S, 1870, dict(pfill=GREEN, pline=GOLD, icon=GOLD, icon_fg=GREEN, label=GOLD_LT, digits=CREAM,
+                               lfill=CREAM, lline=GOLD, ltext=GREEN, pin=BRONZE_TXT, shadow=70),
+            mx=170, ph_h=190, lab=40, dig=100, gap=22, pill_h=80, pill_font=46, pill_mx=300)
+    return img
+
+BUILDS = [("A-teal", build_a), ("B-green-cream", build_b), ("C-light-medallion", build_c), ("C2-authority-name", build_c2), ("C3-refined-type", build_c3)]
 
 if __name__ == "__main__":
     os.makedirs("RollUp", exist_ok=True)
