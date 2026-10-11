@@ -16,28 +16,30 @@ def fit_text(d, xy, text, size, S, fill, maxw, weight=700, anchor="mm", rtl=True
         f = font(weight, f.size - 4)
     d.text((xy[0] * S, xy[1] * S), text, font=f, fill=fill, anchor=anchor, direction="rtl", language="ar")
 
-def contact(img, S, y_phone, th):
-    """phone panel (label + number) and place pill. th = colour dict."""
+def contact(img, S, y_phone, th, mx=100, ph_h=240, lab=44, dig=124, gap=26, pill_h=92, pill_font=50, pill_mx=260):
+    """phone panel (label + number) and place pill. th = colour dict. sizes are in design units."""
     P = lambda v: int(round(v * S)); W = img.size[0]
-    ph = (P(100), P(y_phone), P(DW - 100), P(y_phone + 240))
-    soft_shadow(img, ph, P(100), alpha=th.get("shadow", 120), blur=P(24), off=P(12), rgb=(0, 16, 10))
+    ph = (P(mx), P(y_phone), P(DW - mx), P(y_phone + ph_h))
+    soft_shadow(img, ph, P(ph_h // 2), alpha=th.get("shadow", 120), blur=P(24), off=P(12), rgb=(0, 16, 10))
     d = ImageDraw.Draw(img)
-    d.rounded_rectangle(ph, P(100), fill=th["pfill"], outline=th["pline"], width=max(3, P(5)))
-    d.rounded_rectangle((ph[0] + P(12), ph[1] + P(12), ph[2] - P(12), ph[3] - P(12)), P(88), outline=th["pline"], width=max(1, P(2)))
-    lab = "للتواصل والاستفسار"; lf = font(700, P(44)); lw = lf.getlength(lab, direction="rtl", language="ar")
-    ry = ph[1] + P(66); icx = W // 2 + int(lw / 2) + P(52)
-    d.ellipse((icx - P(34), ry - P(34), icx + P(34), ry + P(34)), fill=th["icon"])
-    iw, ih = P(20), P(36)
+    r_ = P(ph_h // 2)
+    d.rounded_rectangle(ph, r_, fill=th["pfill"], outline=th["pline"], width=max(3, P(5)))
+    d.rounded_rectangle((ph[0] + P(12), ph[1] + P(12), ph[2] - P(12), ph[3] - P(12)), r_ - P(12), outline=th["pline"], width=max(1, P(2)))
+    label = "للتواصل والاستفسار"; lf = font(700, P(lab)); lw = lf.getlength(label, direction="rtl", language="ar")
+    ry = ph[1] + P(ph_h * 0.275); icx = W // 2 + int(lw / 2) + P(lab * 1.2)
+    ir = P(lab * 0.77)
+    d.ellipse((icx - ir, ry - ir, icx + ir, ry + ir), fill=th["icon"])
+    iw, ih = P(lab * .45), P(lab * .82)
     d.rounded_rectangle((icx - iw // 2, ry - ih // 2, icx + iw // 2, ry + ih // 2), P(5), outline=th["icon_fg"], width=max(2, P(4)))
-    d.line((icx - P(5), ry + P(12), icx + P(5), ry + P(12)), fill=th["icon_fg"], width=max(2, P(3)))
-    d.text((W // 2 + int(lw / 2), ry), lab, font=lf, fill=th["label"], anchor="rm", direction="rtl", language="ar")
-    d.line((ph[0] + P(120), ph[1] + P(112), ph[2] - P(120), ph[1] + P(112)), fill=th["pline"], width=max(2, P(2)))
-    f = font(700, P(124))
-    while f.getlength(PHONE) > P(DW - 300): f = font(700, f.size - 4)
-    d.text((W // 2, ph[1] + P(176)), PHONE, font=f, fill=th["digits"], anchor="mm")
-    pl = (P(260), P(y_phone + 266), P(DW - 260), P(y_phone + 358))
-    d.rounded_rectangle(pl, P(46), fill=th["lfill"], outline=th["lline"], width=max(2, P(3)))
-    pf = font(700, P(50)); tw = pf.getlength(PLACE, direction="rtl", language="ar")
+    d.line((icx - P(5), ry + P(lab * .27), icx + P(5), ry + P(lab * .27)), fill=th["icon_fg"], width=max(2, P(3)))
+    d.text((W // 2 + int(lw / 2), ry), label, font=lf, fill=th["label"], anchor="rm", direction="rtl", language="ar")
+    d.line((ph[0] + P(110), ph[1] + P(ph_h * 0.467), ph[2] - P(110), ph[1] + P(ph_h * 0.467)), fill=th["pline"], width=max(2, P(2)))
+    f = font(700, P(dig))
+    while f.getlength(PHONE) > P(DW - 2 * mx - 140): f = font(700, f.size - 4)
+    d.text((W // 2, ph[1] + P(ph_h * 0.733)), PHONE, font=f, fill=th["digits"], anchor="mm")
+    pl = (P(pill_mx), P(y_phone + ph_h + gap), P(DW - pill_mx), P(y_phone + ph_h + gap + pill_h))
+    d.rounded_rectangle(pl, P(pill_h // 2), fill=th["lfill"], outline=th["lline"], width=max(2, P(3)))
+    pf = font(700, P(pill_font)); tw = pf.getlength(PLACE, direction="rtl", language="ar")
     px, py = W // 2 + int(tw / 2) + P(40), (pl[1] + pl[3]) // 2
     d.ellipse((px - P(17), py - P(27), px + P(17), py + P(7)), fill=th["pin"])
     d.polygon([(px - P(15), py - P(5)), (px + P(15), py - P(5)), (px, py + P(27))], fill=th["pin"])
@@ -156,7 +158,64 @@ def build_c(S):
                                lfill=CREAM, lline=GOLD, ltext=GREEN, pin=BRONZE_TXT, shadow=70))
     return img
 
-BUILDS = [("A-teal", build_a), ("B-green-cream", build_b), ("C-light-medallion", build_c)]
+# ================================================================== C2 : layout C + authority name (Hajj & Umrah Authority) as hero
+AUTH1, AUTH2 = "الهيئة العامة", "للحج والعمرة"
+COORD = "تنسيقية حجاج طرابلس ب"
+
+def build_c2(S):
+    P = lambda v: int(round(v * S)); W, H = P(DW), P(DH)
+    img = paper(W, H)
+    img = add_lattice(img, (205, 183, 140), 40, ramp=vramp(H, P(300), P(2300), .25, 1), R=P(120))
+    paste(img, sky_layer(W, 0.6), 0, P(1780))
+    # medallion with the authority logo
+    cx, cy, r = W // 2, P(290), P(410)
+    for rr, col, wd in ((r + P(44), GOLD, 3), (r + P(21), GOLD_LT, 2)):
+        ImageDraw.Draw(img).ellipse((cx - rr, cy - rr, cx + rr, cy + rr), outline=col, width=max(2, P(wd)))
+    md = Image.new("L", img.size, 0); ImageDraw.Draw(md).ellipse((cx - r, cy - r, cx + r, cy + r), fill=255)
+    gg = gradient(W, H, [(0, (0, 98, 84)), (1, (3, 58, 36))], 60)
+    gg = add_lattice(gg, GOLD_LT, 30, R=P(100))
+    img.paste(gg, (0, 0), md.filter(ImageFilter.GaussianBlur(0.6 * S)))
+    d = ImageDraw.Draw(img)
+    d.ellipse((cx - r, cy - r, cx + r, cy + r), outline=GOLD, width=max(4, P(7)))
+    for k_ in range(8):
+        a = math.radians(-90 + k_ * 45 + 22.5)
+        star8(d, cx + int((r + P(44)) * math.cos(a)), cy + int((r + P(44)) * math.sin(a)), P(15), fill=GOLD)
+    lw = P(350); paste(img, smooth(asset("hajj_logo_white"), lw, S), cx - lw // 2, cy - int(lw * 0.5) + P(20))
+    # ---- hero plaque: the Authority name
+    box = (P(70), P(790), P(DW - 70), P(1215))
+    soft_shadow(img, box, P(80), alpha=110, blur=P(26), off=P(14), rgb=(0, 20, 12))
+    d = ImageDraw.Draw(img)
+    pg = gradient(W, H, [(0, (3, 66, 42)), (1, (2, 38, 24))], 90)
+    pm = Image.new("L", img.size, 0); ImageDraw.Draw(pm).rounded_rectangle(box, P(80), fill=255)
+    img.paste(pg, (0, 0), pm)
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle(box, P(80), outline=GOLD, width=max(4, P(6)))
+    d.rounded_rectangle((box[0] + P(16), box[1] + P(16), box[2] - P(16), box[3] - P(16)), P(66), outline=GOLD_LT, width=max(2, P(2)))
+    for sx in (-1, 1):
+        px_, py_ = (box[0] if sx < 0 else box[2]), (box[1] + box[3]) // 2
+        d.polygon([(px_, py_ - P(34)), (px_ + P(34), py_), (px_, py_ + P(34)), (px_ - P(34), py_)], fill=GOLD)
+    # star crown sitting on the top border
+    sx_, sy_ = W // 2, box[1]
+    d.ellipse((sx_ - P(52), sy_ - P(52), sx_ + P(52), sy_ + P(52)), fill=PAPER_A, outline=GOLD, width=max(3, P(5)))
+    star8(d, sx_, sy_, P(34), fill=GOLD); star8(d, sx_, sy_, P(17), fill=PAPER_A, rot=-math.pi / 2 + math.pi / 8)
+    fit_text(d, (W / S / 2, 920), AUTH1, 150, S, CREAM, 780)
+    diamond_divider(img, W // 2, P(1020), half=P(250), gap=P(34), col=GOLD, width=max(2, P(4)), size=P(13))
+    d = ImageDraw.Draw(img)
+    fit_text(d, (W / S / 2, 1122), AUTH2, 150, S, GOLD_LT, 780)
+    # ---- coordination name (smaller than the authority name)
+    fit_text(d, (W / S / 2, 1350), COORD, 88, S, GREEN, 800)
+    ornament_pair(img, W // 2, P(1350), P(DW - 170), col=GOLD, h=P(70))
+    d = ImageDraw.Draw(img)
+    diamond_divider(img, W // 2, P(1428), half=P(200), gap=P(30), col=GOLD, width=max(2, P(3)), size=P(11))
+    # ---- Rakb al-Abrar
+    rw = P(420); paste(img, smooth(asset("rakb_gold"), rw, S), (W - rw) // 2, P(1465))
+    # ---- phone (a bit smaller) + place
+    contact(img, S, 1870, dict(pfill=GREEN, pline=GOLD, icon=GOLD, icon_fg=GREEN, label=GOLD_LT, digits=CREAM,
+                               lfill=CREAM, lline=GOLD, ltext=GREEN, pin=BRONZE_TXT, shadow=70),
+            mx=170, ph_h=190, lab=36, dig=98, gap=22, pill_h=80, pill_font=44, pill_mx=300)
+    return img
+
+BUILDS = [("A-teal", build_a), ("B-green-cream", build_b), ("C-light-medallion", build_c), ("C2-authority-name", build_c2)]
 
 if __name__ == "__main__":
     os.makedirs("RollUp", exist_ok=True)
