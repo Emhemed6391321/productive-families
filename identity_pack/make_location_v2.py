@@ -10,7 +10,7 @@ import real_map as rm
 import make_location as L1
 
 W, H = 1080, 1440
-PHONE = os.environ.get("PHONE", "0XX XXX XXXX")           # <- placeholder until the real number is supplied
+PHONE = os.environ.get("PHONE", "093-4455422")           # <- placeholder until the real number is supplied
 L1.PHOTO = "mapdata/shop_photo2.jpg"
 LM = L1.LM[:3]                                            # three nearest landmarks
 NAME, AREA, NOTE = L1.NAME, L1.AREA, L1.NOTE
