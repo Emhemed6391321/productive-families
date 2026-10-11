@@ -8,7 +8,7 @@ from pack_lib import *
 TPL = "mapdata/template_notice.webp"
 W, H = 1500, 2000
 GREEN_T, BRONZE_T = (5, 64, 32), (147, 106, 52)
-AREA = (110, 668, W - 110, 1462)               # safe area inside the empty region
+AREA = (70, 650, W - 70, 1478)               # safe area inside the empty region
 
 HEAD = "تنويه"
 PASS = "يجب على الحاج والمرافق أن يكون جواز سفرهما ساري المفعول إلى *11/2027م* فما فوق."
@@ -46,15 +46,15 @@ def bullet(d, cx, cy, kind, n, r=22):
 # --------------------------------------------------------------------------- layout A
 def layout_a(img, s):
     d = ImageDraw.Draw(img); x0, x1 = AREA[0], AREA[2]
-    y = AREA[1] + 20
-    heading(img, y + 34, int(84 * s)); y += 100
+    y = AREA[1] + 10
+    heading(img, y + 30, int(min(84, 70 * s))); y += 82
     # passport notice: cream card with gold frame
-    pw = x1 - x0 - 80
-    ph = th(d, PASS, int(40 * s), pw - 80, 700, 1.5) + 50
-    box = (x0 + 40, y, x1 - 40, y + ph)
+    pw = x1 - x0
+    ph = th(d, PASS, int(40 * s), pw - 80, 700, 1.45) + 40
+    box = (x0, y, x1, y + ph)
     bc.shadowed_round(img, box, 40, (255, 252, 244), BRONZE_T, 3, blur=12, off=6, alpha=45); d = ImageDraw.Draw(img)
     d.rounded_rectangle((box[0] + 9, box[1] + 9, box[2] - 9, box[3] - 9), 32, outline=(222, 204, 168), width=2)
-    txt(d, box[0] + 40, box[2] - 40, y + 25, PASS, int(40 * s), 700, GREEN_T, "center", 1.5); y += ph + 28
+    txt(d, box[0] + 40, box[2] - 40, y + 20, PASS, int(40 * s), 700, GREEN_T, "center", 1.45); y += ph + 20
     y += txt(d, x0 + 30, x1 - 30, y, INTRO, int(33 * s), 600, GREEN_T, "center", 1.55) + 14
     d.text((x1 - 30, y + 28), LEAD, font=font(700, int(38 * s)), fill=BRONZE_T, anchor="rm", direction="rtl", language="ar"); y += 62
     for t in ITEMS:
@@ -67,8 +67,8 @@ def layout_a(img, s):
 # --------------------------------------------------------------------------- layout B
 def layout_b(img, s):
     d = ImageDraw.Draw(img); x0, x1 = AREA[0], AREA[2]
-    y = AREA[1] + 12
-    heading(img, y + 34, int(80 * s)); y += 96
+    y = AREA[1] + 8
+    heading(img, y + 30, int(min(84, 70 * s))); y += 80
     ph = th(d, PASS, int(38 * s), x1 - x0 - 160, 700, 1.5) + 54
     box = (x0, y, x1, y + ph)
     soft_shadow(img, box, 36, alpha=70, blur=14, off=7); d = ImageDraw.Draw(img)
@@ -95,8 +95,8 @@ def layout_b(img, s):
 # --------------------------------------------------------------------------- layout C
 def layout_c(img, s):
     d = ImageDraw.Draw(img); x0, x1 = AREA[0], AREA[2]
-    y = AREA[1] + 10
-    heading(img, y + 34, int(80 * s)); y += 94
+    y = AREA[1] + 8
+    heading(img, y + 30, int(min(84, 70 * s))); y += 80
     # passport notice: capsule with gold double frame and medallion
     pw = x1 - x0 - 60
     ph = th(d, PASS, int(37 * s), pw - 260, 700, 1.5) + 50
@@ -129,14 +129,14 @@ def layout_c(img, s):
 
 LAYOUTS = [layout_a, layout_b, layout_c]
 
-def fit(fn, s0=1.0):
+def fit(fn, s0=1.6):
     s = s0
     while s > 0.6:
         im = Image.open(TPL).convert("RGB")
         end = fn(im, s)
         if end <= AREA[3]:
             return im, s, end
-        s -= 0.03
+        s -= 0.02
     return im, s, end
 
 if __name__ == "__main__":
