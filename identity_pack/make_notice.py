@@ -8,7 +8,7 @@ from pack_lib import *
 TPL = "mapdata/template_notice.webp"
 W, H = 1500, 2000
 GREEN_T, BRONZE_T = (5, 64, 32), (147, 106, 52)
-AREA = (110, 668, W - 110, 1480)               # safe area inside the empty region
+AREA = (110, 668, W - 110, 1462)               # safe area inside the empty region
 
 HEAD = "تنويه"
 PASS = "يجب على الحاج والمرافق أن يكون جواز سفرهما ساري المفعول إلى *11/2027م* فما فوق."
