@@ -8,7 +8,7 @@ from pack_lib import *
 TPL = "mapdata/template_notice.webp"
 W, H = 1500, 2000
 GREEN_T, BRONZE_T = (5, 64, 32), (147, 106, 52)
-AREA = (70, 650, W - 70, 1478)               # safe area inside the empty region
+AREA = (56, 640, W - 56, 1486)               # safe area inside the empty region
 
 HEAD = "تنويه"
 PASS = "يجب على الحاج والمرافق أن يكون جواز سفرهما ساري المفعول إلى *11/2027م* فما فوق."
@@ -47,29 +47,29 @@ def bullet(d, cx, cy, kind, n, r=22):
 def layout_a(img, s):
     d = ImageDraw.Draw(img); x0, x1 = AREA[0], AREA[2]
     y = AREA[1] + 10
-    heading(img, y + 30, int(min(84, 70 * s))); y += 82
+    heading(img, y + 26, int(min(76, 62 * s))); y += 80
     # passport notice: cream card with gold frame
     pw = x1 - x0
-    ph = th(d, PASS, int(40 * s), pw - 80, 700, 1.45) + 40
+    ph = th(d, PASS, int(40 * s), pw - 80, 700, 1.36) + 28
     box = (x0, y, x1, y + ph)
     bc.shadowed_round(img, box, 40, (255, 252, 244), BRONZE_T, 3, blur=12, off=6, alpha=45); d = ImageDraw.Draw(img)
     d.rounded_rectangle((box[0] + 9, box[1] + 9, box[2] - 9, box[3] - 9), 32, outline=(222, 204, 168), width=2)
-    txt(d, box[0] + 40, box[2] - 40, y + 20, PASS, int(40 * s), 700, GREEN_T, "center", 1.45); y += ph + 20
-    y += txt(d, x0 + 30, x1 - 30, y, INTRO, int(33 * s), 600, GREEN_T, "center", 1.55) + 14
-    d.text((x1 - 30, y + 28), LEAD, font=font(700, int(38 * s)), fill=BRONZE_T, anchor="rm", direction="rtl", language="ar"); y += 62
+    txt(d, box[0] + 40, box[2] - 40, y + 14, PASS, int(40 * s), 700, GREEN_T, "center", 1.36); y += ph + 12
+    y += txt(d, x0 + 10, x1 - 10, y, INTRO, int(33 * s), 600, GREEN_T, "center", 1.4) + 6
+    d.text((x1 - 30, y + 28), LEAD, font=font(700, int(38 * s)), fill=BRONZE_T, anchor="rm", direction="rtl", language="ar"); y += int(1.5 * 33 * s)
     for t in ITEMS:
-        h = th(d, t, int(33 * s), x1 - x0 - 150, 600, 1.45)
+        h = th(d, t, int(33 * s), x1 - x0 - 120, 600, 1.36)
         bullet(d, x1 - 40, y + 25, "dia", 0)
-        txt(d, x0 + 20, x1 - 80, y, t, int(33 * s), 600, GREEN_T, "right", 1.45)
-        y += h + 12
+        txt(d, x0 + 10, x1 - 70, y, t, int(33 * s), 600, GREEN_T, "right", 1.36)
+        y += h + 6
     return y
 
 # --------------------------------------------------------------------------- layout B
 def layout_b(img, s):
     d = ImageDraw.Draw(img); x0, x1 = AREA[0], AREA[2]
     y = AREA[1] + 8
-    heading(img, y + 30, int(min(84, 70 * s))); y += 80
-    ph = th(d, PASS, int(38 * s), x1 - x0 - 160, 700, 1.5) + 54
+    heading(img, y + 26, int(min(76, 62 * s))); y += 80
+    ph = th(d, PASS, int(38 * s), x1 - x0 - 160, 700, 1.38) + 54
     box = (x0, y, x1, y + ph)
     soft_shadow(img, box, 36, alpha=70, blur=14, off=7); d = ImageDraw.Draw(img)
     d.rounded_rectangle(box, 36, fill=GREEN_T, outline=BRONZE_T, width=3)
@@ -77,18 +77,18 @@ def layout_b(img, s):
     d.text((x1 - 56, y + ph / 2 + 2), "!", font=font(700, 44), fill=(226, 196, 132), anchor="mm")
     txt(d, x0 + 36, x1 - 110, y + 27, PASS, int(38 * s), 700, (255, 252, 244), "right", 1.5, hl=(236, 208, 148)); y += ph + 26
     # list card
-    items_h = sum(th(d, t, int(32 * s), x1 - x0 - 190, 600, 1.45) + 14 for t in ITEMS)
-    ih = th(d, INTRO, int(32 * s), x1 - x0 - 100, 600, 1.55)
+    items_h = sum(th(d, t, int(32 * s), x1 - x0 - 190, 600, 1.36) + 14 for t in ITEMS)
+    ih = th(d, INTRO, int(32 * s), x1 - x0 - 100, 600, 1.4)
     ch = ih + 22 + 56 + items_h + 40
     box = (x0, y, x1, y + ch)
     bc.shadowed_round(img, box, 36, (255, 252, 244), (222, 204, 168), 2, blur=12, off=6, alpha=45); d = ImageDraw.Draw(img)
     yy = y + 20
-    yy += txt(d, x0 + 50, x1 - 50, yy, INTRO, int(32 * s), 600, GREEN_T, "right", 1.55) + 14
+    yy += txt(d, x0 + 50, x1 - 50, yy, INTRO, int(32 * s), 600, GREEN_T, "right", 1.4) + 14
     d.text((x1 - 50, yy + 26), LEAD, font=font(700, int(36 * s)), fill=BRONZE_T, anchor="rm", direction="rtl", language="ar"); yy += 58
     for n, t in enumerate(ITEMS, 1):
-        h = th(d, t, int(32 * s), x1 - x0 - 190, 600, 1.45)
+        h = th(d, t, int(32 * s), x1 - x0 - 190, 600, 1.36)
         bullet(d, x1 - 74, yy + 24, "num", n)
-        txt(d, x0 + 40, x1 - 120, yy, t, int(32 * s), 600, GREEN_T, "right", 1.45)
+        txt(d, x0 + 40, x1 - 120, yy, t, int(32 * s), 600, GREEN_T, "right", 1.36)
         yy += h + 14
     return y + ch
 
@@ -96,10 +96,10 @@ def layout_b(img, s):
 def layout_c(img, s):
     d = ImageDraw.Draw(img); x0, x1 = AREA[0], AREA[2]
     y = AREA[1] + 8
-    heading(img, y + 30, int(min(84, 70 * s))); y += 80
+    heading(img, y + 26, int(min(76, 62 * s))); y += 80
     # passport notice: capsule with gold double frame and medallion
     pw = x1 - x0 - 60
-    ph = th(d, PASS, int(37 * s), pw - 260, 700, 1.5) + 50
+    ph = th(d, PASS, int(37 * s), pw - 260, 700, 1.38) + 50
     box = (x0 + 30, y, x1 - 30, y + ph)
     soft_shadow(img, box, int(ph / 2), alpha=60, blur=14, off=7); d = ImageDraw.Draw(img)
     d.rounded_rectangle(box, int(ph / 2), fill=(255, 252, 244), outline=BRONZE_T, width=4)
@@ -107,8 +107,8 @@ def layout_c(img, s):
     cx, cy = box[2] - 100, y + ph / 2
     d.ellipse((cx - 50, cy - 50, cx + 50, cy + 50), fill=GREEN_T, outline=BRONZE_T, width=3)
     star8(d, cx, cy, 30, fill=(226, 196, 132)); star8(d, cx, cy, 13, fill=GREEN_T, rot=-math.pi / 2 + math.pi / 8)
-    txt(d, box[0] + 50, box[2] - 190, y + 25, PASS, int(37 * s), 700, GREEN_T, "right", 1.5); y += ph + 24
-    y += txt(d, x0 + 30, x1 - 30, y, INTRO, int(32 * s), 600, GREEN_T, "center", 1.55) + 12
+    txt(d, box[0] + 50, box[2] - 190, y + 25, PASS, int(37 * s), 700, GREEN_T, "right", 1.38); y += ph + 24
+    y += txt(d, x0 + 30, x1 - 30, y, INTRO, int(32 * s), 600, GREEN_T, "center", 1.4) + 12
     d.text((W / 2, y + 26), LEAD, font=font(700, int(38 * s)), fill=BRONZE_T, anchor="mm", direction="rtl", language="ar"); y += 62
     # items as a 2-column grid of cards (RTL: item 1 on the right)
     colw = (x1 - x0 - 24) // 2
@@ -129,7 +129,7 @@ def layout_c(img, s):
 
 LAYOUTS = [layout_a, layout_b, layout_c]
 
-def fit(fn, s0=1.6):
+def fit(fn, s0=2.2):
     s = s0
     while s > 0.6:
         im = Image.open(TPL).convert("RGB")
