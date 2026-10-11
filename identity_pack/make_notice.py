@@ -30,11 +30,13 @@ def txt(d, x0, x1, y, t, size, w=600, col=GREEN_T, align="right", lh=1.5, hl=BRO
 
 def heading(img, y, size=84):
     d = ImageDraw.Draw(img)
-    d.text((W / 2, y), HEAD, font=font(700, size), fill=GREEN_T, anchor="mm", direction="rtl", language="ar")
+    f = font(700, size)
+    d.text((W / 2, y), HEAD, font=f, fill=GREEN_T, anchor="mm", direction="rtl", language="ar")
+    tw = f.getlength(HEAD, direction="rtl", language="ar")
     for sx in (-1, 1):
-        d.line((W / 2 + sx * 100, y, W / 2 + sx * 330, y), fill=BRONZE_T, width=3)
-        cx = W / 2 + sx * 348
-        d.polygon([(cx, y - 13), (cx + 13, y), (cx, y + 13), (cx - 13, y)], fill=BRONZE_T)
+        x0 = W / 2 + sx * (tw / 2 + 36); x1 = W / 2 + sx * (tw / 2 + 36 + 230)
+        d.line((x0, y, x1, y), fill=BRONZE_T, width=3)
+        d.polygon([(x1, y - 13), (x1 + 13 * sx, y), (x1, y + 13), (x1 - 13 * sx, y)], fill=BRONZE_T)
 
 def bullet(d, cx, cy, kind, n, r=22):
     if kind == "num":
