@@ -1,0 +1,8 @@
+tts/*.tar.bz2
+tts/vits-piper-*/
+tts/out/
+work/
+app/node_modules/
+app/dist/
+out/*.mp4
+out/*.wav
