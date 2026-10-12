@@ -34,14 +34,20 @@ def centered(d, lines, cx, y, f, fill, lh):
     for ln in lines: d.text((cx, y), ln, font=f, fill=fill, anchor='mm', direction='rtl', language='ar'); y += lh
     return y
 
+def logo_img(sz):
+    im = Image.open('assets/coordination_logo.png').convert('RGB').resize((sz, sz), Image.LANCZOS)
+    mk = Image.new('L', (sz, sz), 0); ImageDraw.Draw(mk).rounded_rectangle((0, 0, sz - 1, sz - 1), sz // 7, fill=255)
+    o = Image.new('RGBA', (sz, sz)); o.paste(im, (0, 0)); o.putalpha(mk); return o
 def intro_card():
-    img = BG.copy(); d = ImageDraw.Draw(img, 'RGBA'); cx = OW / 2
-    d.text((cx, 400), 'ميقات', font=font(220, 700), fill=WHITE, anchor='mm', direction='rtl', language='ar')
-    d.text((cx, 560), 'منظومة ميقات الإلكترونية للحج', font=font(44, 600), fill=(168, 162, 158), anchor='mm', direction='rtl', language='ar')
-    pill(d, cx, 640, 'تنسيقية حجاج طرابلس (ب)', (16, 185, 129, 40), (110, 231, 183), font(42, 700), outline=(16, 185, 129, 110))
+    img = BG.copy().convert('RGBA'); d = ImageDraw.Draw(img, 'RGBA'); cx = OW / 2
+    sh = Image.new('RGBA', (OW, OH), (0, 0, 0, 0)); ImageDraw.Draw(sh).rounded_rectangle((cx - 280, 300, cx + 280, 860), 80, fill=(0, 0, 0, 150))
+    img.alpha_composite(sh.filter(ImageFilter.GaussianBlur(30)))
+    img.alpha_composite(logo_img(560), (int(cx - 280), 260))
+    d.text((cx, 960), 'منظومة ميقات الإلكترونية للحج', font=font(46, 600), fill=(168, 162, 158), anchor='mm', direction='rtl', language='ar')
     t = 'دليل الحاج والمرافق لتعبئة الاستبيان وتحديث البيانات'
-    f = font(84, 700); centered(d, wrap(f, t, 900), cx, 880, f, WHITE, 124)
-    return img
+    f = font(78, 700); centered(d, wrap(f, t, 900), cx, 1080, f, WHITE, 116)
+    pill(d, cx, 1330, 'تنسيقية حجاج طرابلس (ب)', (16, 185, 129, 40), (110, 231, 183), font(42, 700), outline=(16, 185, 129, 110))
+    return img.convert('RGB')
 def light_card(url_text='', n=None, cursor_on=True):
     img = Image.new('RGB', (OW, OH), (245, 245, 244)); d = ImageDraw.Draw(img, 'RGBA')
     d.rounded_rectangle((70, 520, OW - 70, 640), 60, fill=WHITE, outline=(214, 211, 209), width=3)
@@ -50,21 +56,20 @@ def light_card(url_text='', n=None, cursor_on=True):
     f = ImageFont.truetype(FONT_DIR + 'Plex-latin-600.ttf', 42)
     txt = (url_text if n is None else url_text[:n]) + ('│' if cursor_on else '')
     d.text((180, 580), txt, font=f, fill=STONE900, anchor='lm')
-    d.text((cx := OW / 2, 440), 'الرابط الرسمي للاستبيان', font=font(48, 700), fill=STONE800, anchor='mm', direction='rtl', language='ar')
     return img
 def outro_card():
     img = BG.copy(); d = ImageDraw.Draw(img, 'RGBA'); cx = OW / 2
-    d.text((cx, 330), 'ميقات', font=font(150, 700), fill=WHITE, anchor='mm', direction='rtl', language='ar')
-    f = font(62, 700); d.text((cx, 470), 'أنهيت تعبئة الاستبيان؟', font=f, fill=(110, 231, 183), anchor='mm', direction='rtl', language='ar')
+    img = img.convert('RGBA'); img.alpha_composite(logo_img(300), (int(cx - 150), 130)); d = ImageDraw.Draw(img, 'RGBA')
+    f = font(62, 700); d.text((cx, 500), 'أنهيت تعبئة الاستبيان؟', font=f, fill=(110, 231, 183), anchor='mm', direction='rtl', language='ar')
     items = ['ادخل بالرقم الوطني', 'راجع البيانات الشخصية والتواصل', 'أجب عن الإفصاح الصحي بصدق', 'ارفع صورة الجواز الواضحة', 'تأكد من اكتمال البيانات 100%', 'احفظ وأرسل للاعتماد']
-    y = 580; fi = font(46, 600)
+    y = 600; fi = font(46, 600)
     for i, t in enumerate(items):
         d.ellipse((OW - 190, y - 4, OW - 190 + 62, y + 58), fill=(16, 185, 129, 60), outline=(16, 185, 129, 200), width=3)
         d.text((OW - 159, y + 27), str(i + 1).translate(AR), font=font(34, 700), fill=(110, 231, 183), anchor='mm', direction='rtl', language='ar')
         d.text((OW - 215, y + 27), t, font=fi, fill=WHITE, anchor='rm', direction='rtl', language='ar'); y += 96
     pill(d, cx, 1190, 'تنسيقية حجاج طرابلس (ب)', (16, 185, 129, 40), (110, 231, 183), font(40, 700), h=78, outline=(16, 185, 129, 110))
     fu = ImageFont.truetype(FONT_DIR + 'Plex-latin-600.ttf', 40); d.text((cx, 1300), SITE, font=fu, fill=(214, 211, 209), anchor='mm')
-    return img
+    return img.convert('RGB')
 
 # ------------------------------------------------------------------ helpers on the real DOM
 def Q(pg, prefix):      # question block by its numbered title
@@ -79,7 +84,7 @@ def main():
         with sync_playwright() as p:
             b = p.chromium.launch(executable_path='/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args=['--no-sandbox'])
             ctx = b.new_context(viewport={'width': VW, 'height': VH}, device_scale_factor=DSF, locale='ar', has_touch=False)
-            pg = ctx.new_page(); pg.goto(URL); pg.add_style_tag(content='#root > div{padding-bottom:640px !important}'); pg.wait_for_timeout(900)
+            pg = ctx.new_page(); pg.goto(URL); pg.add_style_tag(content='#root > div{padding-bottom:640px !important}'); pg.evaluate('window.__netDelay=250; window.__ocrDelay=330'); pg.wait_for_timeout(900)
             R = Recorder(pg, OUT, dry=DRY, render_from=FROM, durations=DUR)
             if FROM is None and not DRY: R.started = True
             try: run(R, pg)

@@ -1,7 +1,7 @@
 import json, wave, subprocess, numpy as np, os, sys
 from script import LINES
 from rec_core import chunk_caption, FPS
-SEGS = ['work/seg1.mp4', 'work/seg2.mp4']
+SEGS = ['work/seg1.mp4', 'work/seg2.mp4', 'work/seg3.mp4', 'work/seg4.mp4']
 DUR = json.load(open('tts/durations.json'))
 off, events = 0.0, []
 for s in SEGS:

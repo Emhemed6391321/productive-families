@@ -5,6 +5,8 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 OW, OH, FPS = 1080, 1920, 30
+SCALE = float(os.environ.get('SCALE', '0.72'))      # global speed-up of on-screen actions
+NOTEXT = os.environ.get('NOTEXT', '1') == '1'        # no burned-in captions / labels / chips
 TOP = 250; PH = OH - TOP
 VW, VH, DSF = 432, 668, 3
 FONT_DIR = '/home/user/productive-families/dawah_cards/fonts/'
@@ -24,6 +26,11 @@ def cursor_sprite():
     d.polygon([(x * S, y * S) for x, y in pts], fill=(255, 255, 255, 255), outline=(20, 20, 20, 255), width=2 * S)
     return im.resize((40 * 2, 52 * 2), Image.LANCZOS)
 CURSOR = cursor_sprite()
+def _logo(sz):
+    im = Image.open('/home/user/productive-families/meeqat_video/assets/coordination_logo.png').convert('RGB').resize((sz, sz), Image.LANCZOS)
+    m = Image.new('L', (sz, sz), 0); ImageDraw.Draw(m).rounded_rectangle((0, 0, sz - 1, sz - 1), sz // 6, fill=255)
+    o = Image.new('RGBA', (sz, sz)); o.paste(im, (0, 0)); o.putalpha(m); return o
+TOPLOGO = _logo(168)
 
 def wrap(f, text, maxw):
     words, lines, cur = text.split(' '), [], ''
@@ -91,7 +98,7 @@ class Recorder:
             for g, al in ((10, 40), (5, 80)):
                 d.rounded_rectangle((l - pad - g, t - pad - g, r + pad + g, b + pad + g), 26 + g, outline=AMBER + (int(al * a * pulse),), width=4)
             d.rounded_rectangle((l - pad, t - pad, r + pad, b + pad), 26, outline=AMBER + (int(255 * a),), width=6)
-            if hl.get('label'):
+            if hl.get('label') and not NOTEXT:
                 f = font(34, 700); txt = hl['label']; wdt = tw(f, txt) + 44; ty = t - pad - 70
                 if ty < TOP + 10: ty = b + pad + 16
                 cx = min(max((l + r) / 2, wdt / 2 + 24), OW - wdt / 2 - 24)
@@ -116,11 +123,13 @@ class Recorder:
     def _chrome(self, img, card=False):
         base = img; img = Image.new('RGBA', base.size, (0, 0, 0, 0)); d = ImageDraw.Draw(img)
         for (a, b, txt, y) in self.note_sched:
-            if a <= self.t <= b and not card:
+            if a <= self.t <= b and not card and not NOTEXT:
                 al = int(255 * min(1, (self.t - a) / .3, (b - self.t) / .3)); f = font(36, 700); wdt = tw(f, txt) + 70
                 d.rounded_rectangle((OW / 2 - wdt / 2, y, OW / 2 + wdt / 2, y + 74), 37, fill=(5, 150, 105, int(al * .95)), outline=(255, 255, 255, int(al * .6)), width=2)
                 d.text((OW / 2, y + 37), txt, font=f, fill=(255, 255, 255, al), anchor='mm', direction='rtl', language='ar')
-        if self.badge and not card:
+        if not card and NOTEXT:
+            base.alpha_composite(TOPLOGO, ((OW - 168) // 2, 40))
+        if self.badge and not card and not NOTEXT:
             n, tot, title = self.step
             f = font(33, 700); txt = f'{title}'; ft = font(27, 600)
             wdt = max(tw(f, txt) + 150, 460); x0 = (OW - wdt) / 2; y0 = 112
@@ -131,7 +140,7 @@ class Recorder:
             for i in range(tot): d.rounded_rectangle((sx + i * seg + 2, y0 + 100, sx + (i + 1) * seg - 2, y0 + 105), 2, fill=(EMERALD_L if i < n else (90, 90, 90)) + (255,))
             fb = font(23, 600); d.rounded_rectangle((OW - 262, 40, OW - 40, 86), 23, fill=(255, 255, 255, 26))
             d.text((OW - 151, 63), 'بيانات تجريبية وهمية', font=fb, fill=(255, 255, 255, 235), anchor='mm', direction='rtl', language='ar')
-        if self.cap:
+        if self.cap and not NOTEXT:
             txt = self.cap; f = font(54, 700); lines = wrap(f, txt, 900)[:3]; lh = 82; hgt = len(lines) * lh + 46
             y1 = 1560; y0 = y1 - hgt
             d.rounded_rectangle((60, y0, OW - 60, y1), 40, fill=(12, 10, 9, 222))
@@ -160,7 +169,7 @@ class Recorder:
     cap_sched = None; cap_t0 = 0
 
     def hold(self, sec, live=False):
-        n = max(1, round(sec * FPS))
+        n = max(1, round(sec * SCALE * FPS))
         if live and self.rendering: self.emit(n, live=True)
         else:
             if self.rendering: self.snap()
@@ -173,7 +182,7 @@ class Recorder:
         loc = sel if not isinstance(sel, str) else self.page.locator(sel).first
         b = loc.bounding_box(); return (b['x'], b['y'], b['width'], b['height'])
     def cam_to(self, z, cx, cy, sec=0.8):
-        c0 = dict(self.cam); n = max(1, round(sec * FPS))
+        c0 = dict(self.cam); n = max(1, round(sec * SCALE * FPS))
         for i in range(1, n + 1):
             e = ease(i / n); self.cam = dict(z=c0['z'] + (z - c0['z']) * e, cx=c0['cx'] + (cx - c0['cx']) * e, cy=c0['cy'] + (cy - c0['cy']) * e)
             self.emit(1)
@@ -185,7 +194,7 @@ class Recorder:
     def unfocus(self, sec=0.8): self.cam_to(1.0, VW / 2, VH / 2, sec)
     def frame_on(self, sel, sec, label=None, pad=0):
         b = self.bbox(sel) if not isinstance(sel, tuple) else sel
-        self.hl.append(dict(box=(b[0] - pad, b[1] - pad, b[2] + 2 * pad, b[3] + 2 * pad), t0=self.t, t1=self.t + sec, label=label))
+        self.hl.append(dict(box=(b[0] - pad, b[1] - pad, b[2] + 2 * pad, b[3] + 2 * pad), t0=self.t, t1=self.t + sec * SCALE, label=label))
     def clear_frames(self): self.hl = []
 
     # ---------------------------------------------------------------- cursor
@@ -193,7 +202,7 @@ class Recorder:
         x, y, w, h = self.bbox(sel) if not isinstance(sel, tuple) else sel
         tgt = (x + w / 2 + dx, y + h / 2 + dy)
         if self.cursor is None: self.cursor = dict(pt=(VW * .75, VH * .75), vis=True)
-        p0 = self.cursor['pt']; n = max(1, round(sec * FPS))
+        p0 = self.cursor['pt']; n = max(1, round(sec * SCALE * FPS))
         for i in range(1, n + 1):
             e = ease(i / n); arc = math.sin(e * math.pi) * 14
             self.cursor['pt'] = (p0[0] + (tgt[0] - p0[0]) * e + arc * .3, p0[1] + (tgt[1] - p0[1]) * e - arc)
@@ -210,11 +219,11 @@ class Recorder:
         loc = self.page.locator(sel).first if isinstance(sel, str) else sel
         if click: self.click(loc, 0.55, 0.15)
         else: loc.focus()
-        step = max(1, round(FPS / cps))
+        step = max(1, round(FPS / (cps / SCALE)))
         for ch in text:
             self.page.keyboard.type(ch); self.emit(step, live=True, every=step)
     def scroll_to(self, y, sec=1.0):
-        y0 = self.page.evaluate('window.scrollY'); n = max(1, round(sec * FPS)); cur = self.cursor
+        y0 = self.page.evaluate('window.scrollY'); n = max(1, round(sec * SCALE * FPS)); cur = self.cursor
         for i in range(1, n + 1):
             e = ease(i / n); self.page.evaluate(f'window.scrollTo(0,{y0 + (y - y0) * e})')
             if self.rendering: self.snap()
@@ -227,7 +236,7 @@ class Recorder:
         self.scroll_to(max(0, min(mx, top - at * VH + extra)), sec)
 
     # ---------------------------------------------------------------- beats / captions
-    def beat(self, key, gap=0.35):
+    def beat(self, key, gap=0.2):
         return Beat(self, key, gap)
     def card_in(self, card, sec=0.6):
         self.card = card; n = max(1, round(sec * FPS))
@@ -239,7 +248,7 @@ class Recorder:
     def card_hold(self, sec):
         n = max(1, round(sec * FPS))
         for i in range(n): self.emit(1)
-    def note(self, text, sec=2.4, y=1180): self.note_sched.append((self.t, self.t + sec, text, y))
+    def note(self, text, sec=2.4, y=1180): self.note_sched.append((self.t, self.t + sec * SCALE, text, y))
     def finish(self):
         if self.proc: self.proc.stdin.close(); self.proc.wait()
 
