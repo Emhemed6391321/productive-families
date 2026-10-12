@@ -16,9 +16,13 @@ im = Image.open(SRC).convert("RGB")
 a = np.asarray(im).copy()
 H, W = a.shape[:2]
 
+import os
+KEEP_RAKB = os.environ.get("KEEP_RAKB", "0") == "1"            # 1 = keep the Rakb al-Abrar logo exactly as in the source
 # ---- 1) remove the Rakb al-Abrar logo (gold on skyline) before moving anything
 x0, y0, x1, y1 = 110, 1360, 275, 1520
 reg = a[y0:y1, x0:x1].astype(int)
+if KEEP_RAKB:
+    reg = reg * 0
 mask = ((reg[..., 0] - reg[..., 2] > 38) & (reg[..., 0] > 110) & (reg.sum(2) < 520)).astype(np.uint8) * 255
 mask = cv2.dilate(mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9)))
 patch = cv2.inpaint(np.ascontiguousarray(a[y0:y1, x0:x1, ::-1]), mask, 7, cv2.INPAINT_TELEA)[..., ::-1]
@@ -80,5 +84,5 @@ BLACK = (14, 12, 8)
 card_text((608, 1097 + DY, 1075, 1202 + DY), [("الرقم الوطني (أصلي) 2026م", 36, BLACK), ("العدد (2)", 32, BRONZE_T)])
 card_text((125, 1097 + DY, 591, 1202 + DY), [("صورة ملونة لجواز السفر", 36, BLACK), ("العدد (2)", 32, BRONZE_T)])
 card_text((608, 1226 + DY, 1075, 1331 + DY), [("الوضع العائلي (أصلي) 2026م", 36, BLACK), ("العدد (2)", 32, BRONZE_T)])
-img.save("Notice2/Notice-edited.png", optimize=True)
+img.save("Notice2/Notice-edited-with-rakb.png" if KEEP_RAKB else "Notice2/Notice-edited.png", optimize=True)
 print("ok", img.size)
