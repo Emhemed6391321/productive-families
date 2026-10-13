@@ -73,11 +73,15 @@ def route_panel(img, top, dark):
     d.text(((x0 + x1) / 2, top + 288), f"بعد {LIGHT} بنحو {DIST.replace('م', 'متر')} على اليسار باتجاه {ISLAND}", font=font(600, 26), fill=txt, anchor="mm", direction="rtl", language="ar")
 
 TOPS = {1: 1310, 2: 1316, 3: 1356, 4: 1378}
-for i, fn in enumerate(V.CARDS, 1):
-    img = fn()
-    dark = i == 2
-    route_panel(img, TOPS[i], dark)
-    if dark: logo(img, "rakb_gold", (W - 76) // 2, HH - 96, w=76, rgb=GOLD_LT)
-    else: logo(img, "rakb_green", (W - 76) // 2, HH - 96, w=76)
-    os.makedirs("Location", exist_ok=True)
-    img.convert("RGB").save(f"Location/Location-v3-{i}.png", optimize=True); print("v3", i, flush=True)
+def main(tag="v3"):
+  for i, fn in enumerate(V.CARDS, 1):
+      img = fn()
+      dark = i == 2
+      route_panel(img, TOPS[i], dark)
+      if dark: logo(img, "rakb_gold", (W - 76) // 2, HH - 96, w=76, rgb=GOLD_LT)
+      else: logo(img, "rakb_green", (W - 76) // 2, HH - 96, w=76)
+      os.makedirs("Location", exist_ok=True)
+      img.convert("RGB").save(f"Location/Location-{tag}-{i}.png", optimize=True); print(tag, i, flush=True)
+
+if __name__ == "__main__":
+    main()
