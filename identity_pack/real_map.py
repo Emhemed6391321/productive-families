@@ -2,7 +2,7 @@
 Tripoli-B identity: flat, or 3-D (extruded city blocks + perspective tilt)."""
 import math, random
 import numpy as np
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw, ImageFilter, ImageChops
 from scipy import ndimage as ndi
 
 PIN = (595, 965)                                   # office, in cropped-mask coordinates (980 x 1575)
@@ -95,7 +95,7 @@ def _homography(src, dst):
     h = np.linalg.solve(np.array(A, float), np.array([c for p in dst for c in p], float))
     return np.append(h, 1).reshape(3, 3)
 
-def iso(win, width, pal, squash=.56, inset=.16, seed=5, hq_roof=None, neighbor=None):
+def iso(win, width, pal, squash=.56, inset=.16, seed=5, hq_roof=None, neighbor=None, front_road=False):
     """neighbor=(wall, roof) highlights the lot touching the office lot (e.g. the Jotun paints shop); its projected roof centre is returned as project.neighbor."""
     scale = width / (win[2] - win[0])
     road = _crop(_roads(), win, scale)
@@ -135,13 +135,42 @@ def iso(win, width, pal, squash=.56, inset=.16, seed=5, hq_roof=None, neighbor=N
     ground.paste(Image.new("RGBA", road.size, pal["major"] + (255,)), (0, 0), major)
     gmask = Image.fromarray((free * 255).astype("uint8"))
     ground.paste(Image.new("RGBA", road.size, pal["block"] + (255,)), (0, 0), gmask)          # ground inside blocks
+    if front_road and nb_lab:
+        cents2 = ndi.center_of_mass(lots, lab, [pin_lab, nb_lab]); (hy_, hx_), (ny_, nx_) = cents2
+        dx_, dy_ = nx_ - hx_, ny_ - hy_; L_ = math.hypot(dx_, dy_) or 1; dx_, dy_ = dx_ / L_, dy_ / L_
+        nx2, ny2 = -dy_, dx_
+        rd = np.asarray(road) > 0
+        def score(sg):
+            tot = 0
+            for k in range(20, int(90 * scale), 4):
+                for t in (-60, 0, 60):
+                    px_ = int(hx_ + nx2 * sg * k + dx_ * t * scale); py_ = int(hy_ + ny2 * sg * k + dy_ * t * scale)
+                    if 0 <= px_ < sw and 0 <= py_ < sh and rd[py_, px_]: tot += 1
+            return tot
+        sg = 1 if score(1) >= score(-1) else -1
+        ys_l, xs_l = np.nonzero(lab == pin_lab); depth = float(((xs_l - hx_) * nx2 * sg + (ys_l - hy_) * ny2 * sg).max())
+        rw = 40 * scale; off = depth + rw * .5 + 6 * scale
+        mx_, my_ = (hx_ + nx_) / 2 + nx2 * sg * off, (hy_ + ny_) / 2 + ny2 * sg * off
+        ext = 2400 * scale; a_ = (mx_ - dx_ * ext, my_ - dy_ * ext); b_ = (mx_ + dx_ * ext, my_ + dy_ * ext)
+        rl = Image.new("L", ground.size, 0); rdr = ImageDraw.Draw(rl)
+        rdr.line([a_, b_], fill=255, width=int(rw + 8 * scale)); edge_m = rl.copy()
+        rl2 = Image.new("L", ground.size, 0); ImageDraw.Draw(rl2).line([a_, b_], fill=255, width=int(rw)); 
+        ground.paste(Image.new("RGBA", ground.size, (214, 196, 150, 255)), (0, 0), edge_m)
+        ground.paste(Image.new("RGBA", ground.size, (92, 88, 84, 255)), (0, 0), rl2)
+        gd = ImageDraw.Draw(ground); seg = 26 * scale; n_ = int(2 * ext / (seg * 2))
+        for q in range(n_):
+            t0 = -ext + q * 2 * seg; t1 = t0 + seg
+            gd.line([(mx_ + dx_ * t0, my_ + dy_ * t0), (mx_ + dx_ * t1, my_ + dy_ * t1)], fill=(250, 245, 230, 255), width=max(2, int(3 * scale)))
+        band = np.asarray(ImageChops.add(rl, Image.new('L', rl.size, 0))) > 0
     img.paste(ground, (0, pad_top))
+    band = band if (front_road and nb_lab) else None
     rnd = random.Random(seed)
     objs = ndi.find_objects(lab)
     order = sorted(range(1, n + 1), key=lambda i: (objs[i - 1][0].start + objs[i - 1][0].stop) / 2)
     for i in order:
         sl = objs[i - 1]
         m_ = lab[sl] == i
+        if band is not None and i not in (pin_lab, nb_lab): m_ = m_ & ~band[sl]
         area = int(m_.sum())
         if area < 140 * scale * scale:
             continue

@@ -57,12 +57,12 @@ def iso_map(img, box, dark=False, labels=True, r=40, pin_col=None):
     return hx, hy
 
 
-JT_WALL, JT_ROOF = (18, 112, 96), (20, 190, 140)
+JT_WALL, JT_ROOF = (24, 64, 150), (52, 122, 232)
 def iso_focus(img, box, r=40):
     """Close-up 3-D map: only the coordination office (gold) and the Jotun shop next to it (emerald)."""
     cw, ch = box[2] - box[0], box[3] - box[1]
     win = rm.window_for([], pad=230, aspect=1.6)
-    m3, proj = rm.iso(win, 1700, L1.ISO_LIGHT, squash=.50, inset=.08, neighbor=(JT_WALL, JT_ROOF))
+    m3, proj = rm.iso(win, 1700, L1.ISO_LIGHT, squash=.50, inset=.08, neighbor=(JT_WALL, JT_ROOF), front_road=True)
     hx0, hy0 = proj(rm.PIN, 0); jx0, jy0 = proj.neighbor
     cx0 = int(min(max((hx0 + jx0) / 2 - cw * .5, 0), max(0, m3.size[0] - cw))); cy0 = int(min(max((hy0 + jy0) / 2 - ch * .55, 0), max(0, m3.size[1] - ch)))
     crop = Image.new("RGBA", (cw, ch), (236, 227, 208, 255)); crop.alpha_composite(m3.crop((cx0, cy0, cx0 + cw, cy0 + ch)))
