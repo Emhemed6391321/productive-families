@@ -5,7 +5,8 @@ import sys, os, math
 from PIL import Image, ImageDraw, ImageFilter
 from pack_lib import *
 from make_rollup import smooth, PHONE, DW, DH
-from make_rollup_v2 import fit_text, contact, BRONZE_TXT, AUTH1, AUTH2, COORD
+from make_rollup_v2 import fit_text, contact, BRONZE_TXT, COORD
+AUTH1, AUTH2 = "الهيئة العامة", "لشؤون الحج والعمرة"
 
 MUNI = "بلدية سوق الجمعة   •   طرابلس الهضبة المركز   •   بلدية عين زارة"
 
@@ -30,7 +31,7 @@ def build_d(S):
         a = math.radians(-90 + k_ * 45 + 22.5)
         star8(d, cx + int((r + P(44)) * math.cos(a)), cy + int((r + P(44)) * math.sin(a)), P(15), fill=GOLD)
     # ---- authority plaque (deep green, gold type)
-    box = (P(150), P(895), P(DW - 150), P(1105))
+    box = (P(85), P(880), P(DW - 85), P(1120))
     soft_shadow(img, box, P(60), alpha=110, blur=P(26), off=P(14), rgb=(0, 20, 12))
     pg = gradient(W, H, [(0, (3, 70, 44)), (1, (2, 36, 22))], 90)
     pm = Image.new("L", img.size, 0); ImageDraw.Draw(pm).rounded_rectangle(box, P(50), fill=255)
@@ -38,15 +39,15 @@ def build_d(S):
     d = ImageDraw.Draw(img)
     d.rounded_rectangle(box, P(50), outline=GOLD, width=max(4, P(5)))
     d.rounded_rectangle((box[0] + P(12), box[1] + P(12), box[2] - P(12), box[3] - P(12)), P(38), outline=GOLD_LT, width=max(2, P(2)))
-    lead_y, key_y = 950, 1042
-    lf = font(600, P(52)); lt = lf.getlength(AUTH1, direction="rtl", language="ar")
+    lead_y, key_y = 947, 1048
+    lf = font(600, P(62)); lt = lf.getlength(AUTH1, direction="rtl", language="ar")
     d.text((W // 2, P(lead_y)), AUTH1, font=lf, fill=CREAM, anchor="mm", direction="rtl", language="ar")
     for sx in (-1, 1):
-        x0 = W // 2 + sx * (lt / 2 + P(28)); x1 = W // 2 + sx * P(DW / 2 - 205)
+        x0 = W // 2 + sx * (lt / 2 + P(28)); x1 = W // 2 + sx * P(DW / 2 - 170)
         d.line((x0, P(lead_y), x1, P(lead_y)), fill=GOLD, width=max(2, P(3)))
         d.polygon([(x1, P(lead_y) - P(10)), (x1 + P(10), P(lead_y)), (x1, P(lead_y) + P(10)), (x1 - P(10), P(lead_y))], fill=GOLD)
-    kf = font(700, P(100))
-    while kf.getlength(AUTH2, direction="rtl", language="ar") > P(DW - 420): kf = font(700, kf.size - 4)
+    kf = font(700, P(150))
+    while kf.getlength(AUTH2, direction="rtl", language="ar") > P(DW - 290): kf = font(700, kf.size - 4)
     d.text((W // 2, P(key_y)), AUTH2, font=kf, fill=GOLD_LT, anchor="mm", direction="rtl", language="ar")
     sx_, sy_ = W // 2, box[1]
     d.ellipse((sx_ - P(40), sy_ - P(40), sx_ + P(40), sy_ + P(40)), fill=PAPER_A, outline=GOLD, width=max(3, P(5)))
