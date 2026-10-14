@@ -56,6 +56,34 @@ def iso_map(img, box, dark=False, labels=True, r=40, pin_col=None):
     ml.pin(img, hx, hy - 14, 40, pin_col or (GOLD if dark else TEAL), ring=GREEN_DK if dark else CREAM, logo=asset("hajj_logo_white"))
     return hx, hy
 
+
+JT_WALL, JT_ROOF = (18, 112, 96), (20, 190, 140)
+def iso_focus(img, box, r=40):
+    """Close-up 3-D map: only the coordination office (gold) and the Jotun shop next to it (emerald)."""
+    cw, ch = box[2] - box[0], box[3] - box[1]
+    win = rm.window_for([], pad=230, aspect=1.6)
+    m3, proj = rm.iso(win, 1700, L1.ISO_LIGHT, squash=.50, inset=.08, neighbor=(JT_WALL, JT_ROOF))
+    hx0, hy0 = proj(rm.PIN, 0); jx0, jy0 = proj.neighbor
+    cx0 = int(min(max((hx0 + jx0) / 2 - cw * .5, 0), max(0, m3.size[0] - cw))); cy0 = int(min(max((hy0 + jy0) / 2 - ch * .55, 0), max(0, m3.size[1] - ch)))
+    crop = Image.new("RGBA", (cw, ch), (236, 227, 208, 255)); crop.alpha_composite(m3.crop((cx0, cy0, cx0 + cw, cy0 + ch)))
+    soft_shadow(img, box, r, alpha=70, blur=16, off=9, rgb=(90, 70, 30))
+    mm = Image.new("L", img.size, 0); ImageDraw.Draw(mm).rounded_rectangle(box, r, fill=255)
+    layer = Image.new("RGB", img.size); layer.paste(crop.convert("RGB"), (box[0], box[1])); img.paste(layer, (0, 0), mm)
+    ImageDraw.Draw(img).rounded_rectangle(box, r, outline=GOLD, width=4)
+    hx, hy = hx0 - cx0 + box[0], hy0 - cy0 + box[1]; jx, jy = jx0 - cx0 + box[0], jy0 - cy0 + box[1]
+    d = ImageDraw.Draw(img)
+    # Jotun label (emerald pill) with a leader to the roof
+    f = font(700, 30); t = "جوتن للطلاء"; w = f.getlength(t, direction="rtl", language="ar") + 60
+    side = 1 if jx >= hx else -1
+    lx = jx + side * (34 + w / 2); ly = jy - 8
+    lx = min(max(lx, box[0] + w / 2 + 14), box[2] - w / 2 - 14)
+    d.line((jx, jy, lx - side * w / 2, ly), fill=JT_ROOF, width=5); d.ellipse((jx - 9, jy - 9, jx + 9, jy + 9), fill=JT_ROOF, outline=WHITE, width=3)
+    d.rounded_rectangle((lx - w / 2, ly - 27, lx + w / 2, ly + 27), 27, fill=JT_WALL, outline=JT_ROOF, width=3)
+    d.text((lx, ly), t, font=f, fill=WHITE, anchor="mm", direction="rtl", language="ar")
+    ml.pin(img, hx, hy - 14, 44, TEAL, ring=CREAM, logo=asset("hajj_logo_white"), glow_rgb=GOLD)
+    L1.callout(img, hx, hy + 44, "مقر التنسيقية", side="left" if side == 1 else "right")
+    return hx, hy
+
 def route_panel(img, box, dark=False):
     x0, y0, x1, y1 = box; w = x1 - x0
     if dark:
@@ -102,7 +130,7 @@ def n1():
     d.rounded_rectangle((box[0] + 24, box[3] - 74, box[0] + 250, box[3] - 22), 24, fill=(2, 36, 22)); d.text((box[0] + 137, box[3] - 48), "واجهة المقر", font=font(700, 27), fill=GOLD_LT, anchor="mm", direction="rtl", language="ar")
     medallion(img, W - 170, 705, 100, shadow=True); d = ImageDraw.Draw(img)
     d.text((W - 170 - 130, 677), "تنسيقية حجاج", font=font(700, 36), fill=GREEN, anchor="rm", direction="rtl", language="ar"); d.text((W - 170 - 130, 727), "طرابلس ب", font=font(700, 36), fill=GREEN, anchor="rm", direction="rtl", language="ar")
-    mb = (60, 830, W - 60, 1190); iso_map(img, mb)
+    mb = (60, 830, W - 60, 1190); iso_focus(img, mb)
     route_panel(img, (60, 1210, W - 60, 1520))
     contact(img, (60, 1535, W - 60, 1605))
     return img

@@ -95,7 +95,8 @@ def _homography(src, dst):
     h = np.linalg.solve(np.array(A, float), np.array([c for p in dst for c in p], float))
     return np.append(h, 1).reshape(3, 3)
 
-def iso(win, width, pal, squash=.56, inset=.16, seed=5, hq_roof=None):
+def iso(win, width, pal, squash=.56, inset=.16, seed=5, hq_roof=None, neighbor=None):
+    """neighbor=(wall, roof) highlights the lot touching the office lot (e.g. the Jotun paints shop); its projected roof centre is returned as project.neighbor."""
     scale = width / (win[2] - win[0])
     road = _crop(_roads(), win, scale)
     major = _major(road, scale)
@@ -114,6 +115,18 @@ def iso(win, width, pal, squash=.56, inset=.16, seed=5, hq_roof=None):
     ox, oy = to_out(win, scale)(PIN)
     ys, xs = np.nonzero(lots)
     k = int(np.argmin((xs - ox) ** 2 + (ys - oy) ** 2)); pin_lab = lab[ys[k], xs[k]]
+    nb_lab = None; nb_xy_ok = False
+    if neighbor:
+        cents = ndi.center_of_mass(lots, lab, range(1, n + 1)); hq_c = cents[pin_lab - 1]
+        objs0 = ndi.find_objects(lab); cand = []
+        touch = set(np.unique(lab[ndi.binary_dilation(lab == pin_lab, iterations=max(2, int(7 * scale)))]).tolist()) - {0, pin_lab}
+        for i in touch:
+            sl0 = objs0[i - 1]; m0 = lab[sl0] == i; a0 = int(m0.sum())
+            if a0 < 200 * scale * scale or areas[blab[sl0][m0][0] - 1] > .35 * sw * sh: continue
+            cand.append((-a0, i))
+        if not cand:
+            cand = [(math.hypot(c[1] - hq_c[1], c[0] - hq_c[0]), i + 1) for i, c in enumerate(cents) if i + 1 != pin_lab]
+        nb_lab = min(cand)[1]
     pad_top = int(150 * scale)
     img = Image.new("RGBA", (sw, sh + pad_top), (0, 0, 0, 0))
     ground = Image.new("RGBA", (sw, sh), pal["road"] + (255,))
@@ -137,11 +150,13 @@ def iso(win, width, pal, squash=.56, inset=.16, seed=5, hq_roof=None):
         if areas[blab[sl][m_][0] - 1] > .35 * sw * sh:
             continue
         bm = Image.fromarray((m_ * 255).astype("uint8"))
-        is_hq = i == pin_lab
-        h = int((rnd.choice([5, 8, 11, 15, 20, 27]) if not is_hq else 36) * scale * 1.2)
-        wall = pal["hq_wall"] if is_hq else pal["wall"]
+        is_hq = i == pin_lab; is_nb = i == nb_lab
+        h = int((rnd.choice([5, 8, 11, 15, 20, 27]) if not (is_hq or is_nb) else 36) * scale * 1.2)
+        wall = pal["hq_wall"] if is_hq else (neighbor[0] if is_nb else pal["wall"])
         k_ = rnd.uniform(.93, 1.0)
-        roof = (hq_roof or pal["hq_roof"]) if is_hq else tuple(int(c * k_) for c in pal["roof"])
+        roof = (hq_roof or pal["hq_roof"]) if is_hq else (neighbor[1] if is_nb else tuple(int(c * k_) for c in pal["roof"]))
+        if is_nb:
+            cy_, cx_ = ndi.center_of_mass(m_); nb_xy = (x0 + cx_, y0 + cy_ + pad_top - h); nb_xy_ok = True
         img.paste(Image.new("RGBA", bm.size, pal["shadow"]), (x0 + int(h * .3), y0 + pad_top + int(h * .12)), bm)
         for t in range(0, h, 2):
             col = tuple(int(c * (0.74 + 0.26 * t / h)) for c in wall) + (255,)
@@ -160,6 +175,8 @@ def iso(win, width, pal, squash=.56, inset=.16, seed=5, hq_roof=None):
     def project(p, z=0):
         x, y = to_out(win, scale)(p); y += pad_top - z * scale
         v = Hm @ np.array([x, y, 1.0]); return v[0] / v[2], v[1] / v[2]
+    if neighbor and nb_xy_ok:
+        v_ = Hm @ np.array([nb_xy[0], nb_xy[1], 1.0]); project.neighbor = (v_[0] / v_[2], v_[1] / v_[2])
     return out, project
 
 def ImageChops_sub(a, b):
