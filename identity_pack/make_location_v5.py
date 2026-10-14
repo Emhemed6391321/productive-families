@@ -21,9 +21,11 @@ L1.PHOTO = "mapdata/shop_photo4.jpg"
 _photo = L1.photo
 def photo(w, h, focus=None):
     if w <= 300: focus = (0, .50, 1, .84)
-    elif w / h > 1.1: focus = (0, .50, 1, .88)
+    elif w / h > 1.1: focus = (0, .36, 1, .74)
     else: focus = (0, .04, 1, .90)
     return _photo(w, h, focus)
+
+L1.photo = photo
 
 def iso_map(img, box, dark=False, labels=True, r=40, pin_col=None):
     cw, ch = box[2] - box[0], box[3] - box[1]
