@@ -8,7 +8,7 @@ from make_rollup import smooth, PHONE, DW, DH
 from make_rollup_v2 import fit_text, contact, BRONZE_TXT, COORD
 AUTH1, AUTH2 = "الهيئة العامة", "لشؤون الحج والعمرة"
 
-MUNI = "بلدية سوق الجمعة   •   طرابلس الهضبة المركز   •   بلدية عين زارة"
+MUNI = "بلدية سوق الجمعة   •   بلدية طرابلس الهضبة المركز   •   بلدية عين زارة"
 
 def build_d(S):
     P = lambda v: int(round(v * S)); W, H = P(DW), P(DH)
