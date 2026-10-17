@@ -182,7 +182,7 @@ def sun_icon(ctx, x, y, r, alpha=255):
     ctx.g.ellipse(((x - r) * S, (y - r) * S, (x + r) * S, (y + r) * S), fill=(175, 137, 59, alpha)); ctx.g.ellipse(((x - r * .7) * S, (y - r * .7) * S, (x + r * .7) * S, (y + r * .7) * S), fill=(226, 196, 132, alpha))
 
 # ------------------------------------------------------------------ frame renderer
-def render3d(scene, t, T):
+def render3d(scene, t, T, chrome=True):
     camp = scene["cam"](t, T); wname = scene["world"]; cam = Cam(*camp)
     base = warp_base(np.asarray(world(wname)), cam, PAPER_MAP)
     ctx = Ctx3(wname, camp, t, T); scene["draw"](ctx, t, T)
@@ -190,6 +190,8 @@ def render3d(scene, t, T):
     if scene.get("dusk"):
         k = scene["dusk"](t, T)
         if k > 0: img.alpha_composite(Image.new("RGBA", (W, H), (20, 38, 60, int(150 * k))))
+    if not chrome:
+        draw_texts(img, ctx); return img.convert('RGB')
     # atmospheric haze toward the far (top) edge
     haze = Image.new("RGBA", (W, 560), (0, 0, 0, 0)); hd = ImageDraw.Draw(haze)
     for y in range(560): hd.line((0, y, W, y), fill=(250, 241, 228, int(255 * max(0, 1 - y / 560) ** 1.6 * .85)))
