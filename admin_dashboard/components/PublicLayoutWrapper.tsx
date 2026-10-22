@@ -6,12 +6,14 @@ export default function PublicLayoutWrapper({ children }: { children: React.Reac
     const pathname = usePathname();
     const isDashboard = pathname?.startsWith('/dashboard');
     const isAdminLogin = pathname?.startsWith('/admin/login');
+    const isMedicalPlace = pathname?.startsWith('/medical-place');
 
     // Don't show public header on dashboard or admin login (admin login has its own style, or maybe keep it?)
     // Let's keep it clean: no header on dashboard (it has sidebar).
     // Admin login might want to go back to home, but it has its own UI.
+    // Medical place page is a standalone QR landing page with its own branding.
 
-    if (isDashboard) return <>{children}</>;
+    if (isDashboard || isMedicalPlace) return <>{children}</>;
 
     return (
         <>
